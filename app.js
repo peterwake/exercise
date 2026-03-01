@@ -1,9 +1,3 @@
-// Parse duration string to seconds
-function parseDuration(duration) {
-  const parts = duration.split(':');
-  return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
-}
-
 // Format seconds to MM:SS
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
@@ -101,13 +95,15 @@ let femaleVoice = null;
 function loadVoices() {
   const voices = speechSynthesis.getVoices();
   // Try to find a female voice (common female voice names)
-  femaleVoice = voices.find(v =>
-    /female|samantha|victoria|karen|fiona|moira|tessa|allison|susan|zira|hazel/i.test(v.name)
-  ) || voices.find(v =>
-    v.lang.startsWith('en') && /female/i.test(v.name)
-  ) || voices.find(v =>
-    v.lang.startsWith('en')
-  ) || voices[0];
+  femaleVoice =
+    voices.find((v) =>
+      /female|samantha|victoria|karen|fiona|moira|tessa|allison|susan|zira|hazel/i.test(
+        v.name,
+      ),
+    ) ||
+    voices.find((v) => v.lang.startsWith('en') && /female/i.test(v.name)) ||
+    voices.find((v) => v.lang.startsWith('en')) ||
+    voices[0];
 }
 
 if ('speechSynthesis' in window) {
@@ -139,7 +135,7 @@ function loadProgress() {
   const elapsedMatch = document.cookie.match(/totalElapsed=(\d+)/);
   return {
     index: indexMatch ? parseInt(indexMatch[1]) : 0,
-    elapsed: elapsedMatch ? parseInt(elapsedMatch[1]) : 0
+    elapsed: elapsedMatch ? parseInt(elapsedMatch[1]) : 0,
   };
 }
 
@@ -178,12 +174,13 @@ function updateDisplay() {
   // Calculate total remaining time
   let totalRemaining = exerciseTimeRemaining;
   for (let i = currentExerciseIndex + 1; i < exercises.length; i++) {
-    totalRemaining += parseDuration(exercises[i].duration);
+    totalRemaining += exercises[i].duration;
   }
   totalRemainingEl.textContent = formatTime(totalRemaining);
 
-  const totalDuration = parseDuration(exercise.duration);
-  const progress = ((totalDuration - exerciseTimeRemaining) / totalDuration) * 100;
+  const totalDuration = exercise.duration;
+  const progress =
+    ((totalDuration - exerciseTimeRemaining) / totalDuration) * 100;
   progressFillEl.style.width = `${progress}%`;
 
   exerciseInfoEl.textContent = `Exercise ${currentExerciseIndex + 1} of ${exercises.length}`;
@@ -192,15 +189,21 @@ function updateDisplay() {
 }
 
 function updateUpcoming() {
-  const upcoming = exercises.slice(currentExerciseIndex + 1, currentExerciseIndex + 4);
-  upcomingList.innerHTML = upcoming.map((ex, i) =>
-    `<div class="upcoming-item${i === 0 ? ' next' : ''}">${ex.exercise} - ${ex.duration.slice(3)}</div>`
-  ).join('');
+  const upcoming = exercises.slice(
+    currentExerciseIndex + 1,
+    currentExerciseIndex + 4,
+  );
+  upcomingList.innerHTML = upcoming
+    .map(
+      (ex, i) =>
+        `<div class="upcoming-item${i === 0 ? ' next' : ''}">${ex.exercise} - ${ex.duration.slice(3)}</div>`,
+    )
+    .join('');
 }
 
 function startExercise() {
   const exercise = exercises[currentExerciseIndex];
-  exerciseTimeRemaining = parseDuration(exercise.duration);
+  exerciseTimeRemaining = exercise.duration;
   longBell();
   speak(exercise.exercise);
   updateDisplay();
@@ -211,10 +214,10 @@ function nextExercise() {
   saveProgress(currentExerciseIndex, totalTimeElapsed);
   if (currentExerciseIndex >= exercises.length) {
     // Program complete
-    exerciseNameEl.textContent = "🎉 Workout Complete!";
+    exerciseNameEl.textContent = '🎉 Workout Complete!';
     exerciseTimerEl.textContent = formatTime(totalTimeElapsed);
     progressFillEl.style.width = '100%';
-    exerciseInfoEl.textContent = "Great job!";
+    exerciseInfoEl.textContent = 'Great job!';
     clearInterval(intervalId);
     pauseBtn.style.display = 'none';
     clearProgress();
