@@ -300,7 +300,7 @@ function reset() {
   exerciseNameEl.textContent = 'Press Start to Begin';
   exerciseTimerEl.textContent = '--:--';
   totalTimeEl.textContent = '00:00';
-  totalRemainingEl.textContent = '--:--';
+  totalRemainingEl.textContent = formatTime(getTotalWorkoutTime());
   progressFillEl.style.width = '0%';
   exerciseInfoEl.textContent = '';
 
@@ -314,6 +314,14 @@ startBtn.addEventListener('click', start);
 pauseBtn.addEventListener('click', togglePause);
 resetBtn.addEventListener('click', reset);
 
+// Calculate total workout time
+function getTotalWorkoutTime() {
+  return exercises.reduce((sum, ex) => sum + ex.duration, 0);
+}
+
+// Show total time on load
+totalRemainingEl.textContent = formatTime(getTotalWorkoutTime());
+
 // Check for saved progress on load
 const savedProgress = loadProgress();
 if (savedProgress.index > 0 && savedProgress.index < exercises.length) {
@@ -322,4 +330,10 @@ if (savedProgress.index > 0 && savedProgress.index < exercises.length) {
   exerciseNameEl.textContent = `Resume: ${exercises[savedProgress.index].exercise}`;
   exerciseInfoEl.textContent = `Exercise ${savedProgress.index + 1} of ${exercises.length}`;
   totalTimeEl.textContent = formatTime(totalTimeElapsed);
+  // Update remaining time for resumed session
+  let remaining = 0;
+  for (let i = savedProgress.index; i < exercises.length; i++) {
+    remaining += exercises[i].duration;
+  }
+  totalRemainingEl.textContent = formatTime(remaining);
 }
