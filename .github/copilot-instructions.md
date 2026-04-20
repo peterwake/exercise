@@ -39,6 +39,17 @@ There are two screens, toggled by `display` style:
 - `#programPicker` — shown when no program cookie exists, or after clicking Change
 - `#workoutContainer` — the main workout view
 
+## Versioning
+
+The `<script>` tags in `index.html` include a `?v=YYYYMMDDHHmm` cache-busting query string:
+
+```html
+<script src="programs.js?v=202604201836"></script>
+<script src="app.js?v=202604201836"></script>
+```
+
+**Whenever you modify `programs.js` or `app.js`, update both version strings to the current date and time in `YYYYMMDDHHmm` format.** This ensures browsers do not serve stale cached files after a deploy.
+
 ## Conventions
 
 - Use `formatTime(seconds)` for all time display (returns `MM:SS`).
