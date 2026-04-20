@@ -125,10 +125,126 @@
     .completed {
       color: #4ade80 !important;
     }
+
+    /* Program picker */
+    .program-picker {
+      text-align: center;
+      max-width: 800px;
+      width: 100%;
+    }
+    .program-picker h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .program-picker .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+      font-size: 1rem;
+    }
+    .program-cards {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .program-card {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 30px 40px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.1s;
+      min-width: 200px;
+      text-align: center;
+    }
+    .program-card:hover {
+      border-color: #4ade80;
+      transform: scale(1.03);
+    }
+    .program-card h2 {
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+    }
+    .program-card .card-duration {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #4ade80;
+    }
+    .program-card .card-count {
+      color: #888;
+      font-size: 0.85rem;
+      margin-top: 6px;
+    }
+
+    /* Program header in workout view */
+    .program-header {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .change-program-btn {
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      background: rgba(255,255,255,0.08);
+      color: #aaa;
+      border-radius: 5px;
+    }
+    .change-program-btn:hover {
+      background: rgba(255,255,255,0.18);
+      color: white;
+      transform: none;
+    }
+
+    @media (max-height: 680px) {
+      .exercise-name { font-size: 2rem; min-height: 55px; }
+      .exercise-timer { font-size: 3rem; }
+      .upcoming-item.next { font-size: 2rem; }
+    }
+
+    .exercise-list {
+      margin-top: 15px;
+      text-align: left;
+      background: rgba(255,255,255,0.05);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #888;
+    }
+    .exercise-list-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .exercise-list-item:last-child {
+      border-bottom: none;
+    }
+    .exercise-list-duration {
+      color: #666;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- Program selection screen -->
+  <div id="programPicker" class="program-picker" style="display:none;">
+    <h1>Exercise Programs</h1>
+    <p class="subtitle">Choose your program to get started</p>
+    <div class="program-cards" id="programCards"></div>
+  </div>
+
+  <!-- Workout screen -->
+  <div class="container" id="workoutContainer" style="display:none;">
+    <div class="program-header">
+      <span id="programTitle"></span>
+      <button class="change-program-btn" id="changeProgramBtn">Change</button>
+    </div>
     <div class="total-time">Total Time: <span id="totalTime">00:00</span></div>
     <div class="total-time">Remaining: <span id="totalRemaining">--:--</span></div>
 
@@ -152,9 +268,11 @@
       <h3>Coming Up</h3>
       <div id="upcomingList"></div>
     </div>
+
+    <div class="exercise-list" id="exerciseList"></div>
   </div>
 
-  <script src="exercises.js"></script>
+  <script src="programs.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

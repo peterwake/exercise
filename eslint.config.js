@@ -20,6 +20,8 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         exercises: 'readonly',
+        programs: 'readonly',
+        selectProgram: 'readonly',
       },
     },
     rules: {

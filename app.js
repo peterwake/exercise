@@ -144,6 +144,18 @@ function clearProgress() {
   document.cookie = 'totalElapsed=0;max-age=0;path=/';
 }
 
+function saveActiveProgram(programId) {
+  document.cookie = `activeProgram=${programId};max-age=31536000;path=/`;
+}
+
+function loadActiveProgram() {
+  const match = document.cookie.match(/activeProgram=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+// Active exercises (loaded from selected program)
+let exercises = [];
+
 // State
 let currentExerciseIndex = 0;
 let exerciseTimeRemaining = 0;
@@ -164,6 +176,11 @@ const pauseBtn = document.getElementById('pauseBtn');
 const resetBtn = document.getElementById('resetBtn');
 const upcomingSection = document.getElementById('upcomingSection');
 const upcomingList = document.getElementById('upcomingList');
+const exerciseListEl = document.getElementById('exerciseList');
+const programPicker = document.getElementById('programPicker');
+const workoutContainer = document.getElementById('workoutContainer');
+const programTitleEl = document.getElementById('programTitle');
+const changeProgramBtn = document.getElementById('changeProgramBtn');
 
 function updateDisplay() {
   const exercise = exercises[currentExerciseIndex];
@@ -196,7 +213,7 @@ function updateUpcoming() {
   upcomingList.innerHTML = upcoming
     .map(
       (ex, i) =>
-        `<div class="upcoming-item${i === 0 ? ' next' : ''}">${ex.exercise} - ${ex.duration.slice(3)}</div>`,
+        `<div class="upcoming-item${i === 0 ? ' next' : ''}">${ex.exercise} - ${formatTime(ex.duration)}</div>`,
     )
     .join('');
 }
@@ -265,6 +282,8 @@ function start() {
   startBtn.style.display = 'none';
   pauseBtn.style.display = 'inline-block';
   resetBtn.style.display = 'inline-block';
+  changeProgramBtn.style.display = 'none';
+  exerciseListEl.style.display = 'none';
   pauseBtn.textContent = 'Pause';
   pauseBtn.classList.remove('paused');
 
@@ -307,33 +326,120 @@ function reset() {
   startBtn.style.display = 'inline-block';
   pauseBtn.style.display = 'none';
   resetBtn.style.display = 'none';
+  changeProgramBtn.style.display = 'inline-block';
   upcomingSection.style.display = 'none';
+  exerciseListEl.style.display = 'block';
 }
 
 startBtn.addEventListener('click', start);
 pauseBtn.addEventListener('click', togglePause);
 resetBtn.addEventListener('click', reset);
+changeProgramBtn.addEventListener('click', () => {
+  if (isStarted) {
+    reset();
+  }
+  showProgramPicker();
+});
+
+// Program picker
+function showProgramPicker() {
+  workoutContainer.style.display = 'none';
+  programPicker.style.display = 'block';
+
+  const cardsContainer = document.getElementById('programCards');
+  cardsContainer.innerHTML = programs
+    .map((p) => {
+      const totalSecs = p.exercises.reduce((sum, ex) => sum + ex.duration, 0);
+      return `<div class="program-card" onclick="selectProgram('${p.id}')">
+        <h2>${p.title}</h2>
+        <div class="card-duration">${formatTime(totalSecs)}</div>
+        <div class="card-count">${p.exercises.length} exercises</div>
+      </div>`;
+    })
+    .join('');
+}
+
+// eslint-disable-next-line no-unused-vars
+function selectProgram(programId) {
+  const program = programs.find((p) => p.id === programId);
+  if (!program) return;
+
+  exercises = program.exercises;
+  saveActiveProgram(programId);
+  clearProgress();
+
+  // Reset workout state cleanly
+  clearInterval(intervalId);
+  intervalId = null;
+  currentExerciseIndex = 0;
+  totalTimeElapsed = 0;
+  exerciseTimeRemaining = 0;
+  isPaused = true;
+  isStarted = false;
+  releaseWakeLock();
+
+  programTitleEl.textContent = program.title;
+  exerciseNameEl.textContent = 'Press Start to Begin';
+  exerciseTimerEl.textContent = '--:--';
+  totalTimeEl.textContent = '00:00';
+  totalRemainingEl.textContent = formatTime(getTotalWorkoutTime());
+  progressFillEl.style.width = '0%';
+  exerciseInfoEl.textContent = '';
+  startBtn.style.display = 'inline-block';
+  pauseBtn.style.display = 'none';
+  resetBtn.style.display = 'none';
+  changeProgramBtn.style.display = 'inline-block';
+  upcomingSection.style.display = 'none';
+
+  programPicker.style.display = 'none';
+  workoutContainer.style.display = 'block';
+
+  renderExerciseList();
+}
+
+function renderExerciseList() {
+  exerciseListEl.innerHTML = exercises
+    .map(
+      (ex) =>
+        `<div class="exercise-list-item"><span>${ex.exercise}</span><span class="exercise-list-duration">${formatTime(ex.duration)}</span></div>`,
+    )
+    .join('');
+  exerciseListEl.style.display = 'block';
+}
 
 // Calculate total workout time
 function getTotalWorkoutTime() {
   return exercises.reduce((sum, ex) => sum + ex.duration, 0);
 }
 
-// Show total time on load
-totalRemainingEl.textContent = formatTime(getTotalWorkoutTime());
+// Initialise: restore saved program or show program picker
+(function init() {
+  const savedProgramId = loadActiveProgram();
+  const program = savedProgramId && programs.find((p) => p.id === savedProgramId);
 
-// Check for saved progress on load
-const savedProgress = loadProgress();
-if (savedProgress.index > 0 && savedProgress.index < exercises.length) {
-  currentExerciseIndex = savedProgress.index;
-  totalTimeElapsed = savedProgress.elapsed;
-  exerciseNameEl.textContent = `Resume: ${exercises[savedProgress.index].exercise}`;
-  exerciseInfoEl.textContent = `Exercise ${savedProgress.index + 1} of ${exercises.length}`;
-  totalTimeEl.textContent = formatTime(totalTimeElapsed);
-  // Update remaining time for resumed session
-  let remaining = 0;
-  for (let i = savedProgress.index; i < exercises.length; i++) {
-    remaining += exercises[i].duration;
+  if (program) {
+    exercises = program.exercises;
+    programTitleEl.textContent = program.title;
+    workoutContainer.style.display = 'block';
+
+    totalRemainingEl.textContent = formatTime(getTotalWorkoutTime());
+    renderExerciseList();
+
+    // Restore in-progress workout if saved
+    const savedProgress = loadProgress();
+    if (savedProgress.index > 0 && savedProgress.index < exercises.length) {
+      currentExerciseIndex = savedProgress.index;
+      totalTimeElapsed = savedProgress.elapsed;
+      exerciseNameEl.textContent = `Resume: ${exercises[savedProgress.index].exercise}`;
+      exerciseInfoEl.textContent = `Exercise ${savedProgress.index + 1} of ${exercises.length}`;
+      totalTimeEl.textContent = formatTime(totalTimeElapsed);
+      let remaining = 0;
+      for (let i = savedProgress.index; i < exercises.length; i++) {
+        remaining += exercises[i].duration;
+      }
+      totalRemainingEl.textContent = formatTime(remaining);
+    }
+  } else {
+    showProgramPicker();
   }
-  totalRemainingEl.textContent = formatTime(remaining);
-}
+})();
