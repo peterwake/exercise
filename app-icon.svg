@@ -1,0 +1,11 @@
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="180" rx="40" fill="#1C1C1E"/>
+  
+  <g transform="rotate(-15 90 90)">
+    <path d="M90 45 A 45 45 0 1 1 50 110" fill="none" stroke="#CCFF00" stroke-width="12" stroke-linecap="round"/>
+    
+    <rect x="65" y="85" width="50" height="10" rx="5" fill="#CCFF00"/>
+    <rect x="60" y="80" width="10" height="20" rx="3" fill="#CCFF00"/>
+    <rect x="110" y="80" width="10" height="20" rx="3" fill="#CCFF00"/>
+  </g>
+</svg>
