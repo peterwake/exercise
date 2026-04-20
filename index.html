@@ -31,8 +31,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       padding: 10px;
+      padding-top: calc(10px + env(safe-area-inset-top));
+      padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      overflow-y: auto;
+    }
+    .container, .program-picker {
+      margin: auto 0;
     }
     .container {
       text-align: center;
