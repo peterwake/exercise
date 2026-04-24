@@ -31,6 +31,9 @@ async function releaseWakeLock() {
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible' && isStarted && !isPaused) {
     await requestWakeLock();
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
   }
 });
 
@@ -39,6 +42,10 @@ let audioContext = null;
 function bell(duration = 0.5, frequency = 880) {
   if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  // iOS Safari suspends AudioContext in standalone PWA mode — resume before use
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
   }
 
   const now = audioContext.currentTime;
